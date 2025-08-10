@@ -54,6 +54,12 @@ go get gofr.dev/pkg/gofr/datasource/mongo@latest
 ```
 
 ### Example
+.env file
+```
+PORT="8000"
+MONGODB_URI="mongodb://localhost:27017/"
+MONGODB_DATABASE="ayush"
+```
 ```go
 package main
 
@@ -74,9 +80,11 @@ type Person struct {
 
 func main() {
 	app := gofr.New()
-
-	db := mongo.New(mongo.Config{URI: "mongodb://localhost:27017", Database: "test", ConnectionTimeout: 4 * time.Second})
-
+    db := mongo.New(mongo.Config{
+		URI:               app.Config.Get("MONGODB_URI"),
+		Database:          app.Config.Get("MONGODB_DATABASE"),
+		ConnectionTimeout: 4 * time.Second,
+	})
 	// inject the mongo into gofr to use mongoDB across the application
 	// using gofr context
 	app.AddMongo(db)
