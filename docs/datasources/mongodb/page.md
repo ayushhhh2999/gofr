@@ -55,11 +55,12 @@ go get gofr.dev/pkg/gofr/datasource/mongo@latest
 
 ### Example
 .env file
-```
+```.env
 PORT="8000"
 MONGODB_URI="mongodb://localhost:27017/"
-MONGODB_DATABASE="ayush"
+MONGODB_DATABASE="test"
 ```
+main.go
 ```go
 package main
 
@@ -122,4 +123,49 @@ func Get(ctx *gofr.Context) (any, error) {
 
 	return result, nil
 }
+```
+Dockerfile
+```Dockerfile
+FROM golang:1.24 as builder
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+RUN go build -o server .
+
+EXPOSE 8000
+
+CMD ["./server"]
+```
+docker-compose.yml
+```docker-compose.yml
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/test
+      - MONGODB_DATABASE=test
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
 ```
