@@ -33,13 +33,18 @@ compromising the extensibility to use multiple databases.
 Project Structure
 
 ```
-configs/
-    .env
-main.go
-Dockerfile
-docker-compose.yml
-go.mod
-go.sum
+Project Structure
+Mongo-app
+  configs/ * GoFr automatically looks for environment files in a configs directory and loads them at startup.
+       .env
+  main.go
+  Dockerfile
+  docker-compose.yml
+  internal/ * At production level it's a good practice to create sperate files for your hadler function and models 
+       handlers/ (optional) 
+       models/ (optional)
+  go.mod
+  go.sum
 ```
 
 Import the gofr's external driver for MongoDB:
