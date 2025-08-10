@@ -32,6 +32,7 @@ User's can easily inject a driver that supports this interface, this provides us
 compromising the extensibility to use multiple databases.
 Project Structure
 
+```
 configs/
     .env
     .env.docker
@@ -40,7 +41,7 @@ Dockerfile
 docker-compose.yml
 go.mod
 go.sum
-
+```
 
 Import the gofr's external driver for MongoDB:
 
