@@ -35,7 +35,6 @@ Project Structure
 ```
 configs/
     .env
-    .env.docker
 main.go
 Dockerfile
 docker-compose.yml
