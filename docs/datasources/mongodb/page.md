@@ -30,23 +30,25 @@ type Mongo interface {
 
 User's can easily inject a driver that supports this interface, this provides usability without
 compromising the extensibility to use multiple databases.
-Project Structure
 
-```
+```graphql
 Project Structure
 Mongo-app
-  configs/ * GoFr automatically looks for environment files in a configs directory and loads them at startup.
+  configs/ 
        .env
   main.go
   Dockerfile
   docker-compose.yml
-  internal/ * At production level it's a good practice to create sperate files for your hadler function and models 
-       handlers/ (optional) 
-       models/ (optional)
   go.mod
   go.sum
 ```
-
+* GoFr automatically looks for environment files in a configs directory and loads them at startup.
+```graphql
+ internal/ 
+       handlers/ (optional) 
+       models/ (optional)
+```
+* At production level it's a good practice to create sperate files for your hadler function and models 
 Import the gofr's external driver for MongoDB:
 
 ```shell
@@ -73,6 +75,8 @@ import (
 	"gofr.dev/pkg/gofr"
 )
 
+// Person struct represents the data model for MongoDB documents.
+// The struct tags (`bson` & `json`) ensure correct mapping for both MongoDB and JSON APIs.
 type Person struct {
 	Name string `bson:"name" json:"name"`
 	Age  int    `bson:"age" json:"age"`
@@ -80,50 +84,77 @@ type Person struct {
 }
 
 func main() {
+	// Initialize a new Gofr application instance.
 	app := gofr.New()
-    db := mongo.New(mongo.Config{
+    Load MongoDB configuration from environment variables.
+	db := mongo.New(mongo.Config{
 		URI:               app.Config.Get("MONGODB_URI"),
 		Database:          app.Config.Get("MONGODB_DATABASE"),
-		ConnectionTimeout: 4 * time.Second,
+		ConnectionTimeout: 4 * time.Second, // Connection timeout to avoid hanging connections
 	})
-	// inject the mongo into gofr to use mongoDB across the application
-	// using gofr context
+
+	// Inject the MongoDB client into Gofr's application context
+	// This allows handlers to access MongoDB easily via ctx.Mongo
 	app.AddMongo(db)
 
-	app.POST("/mongo", Insert)
-	app.GET("/mongo", Get)
+	// Define API routes
+	app.POST("/mongo", Insert) // Route for inserting a document
+	app.GET("/mongo", Get)     // Route for fetching a document by name
 
+	// Start the server
 	app.Run()
 }
 
+// Insert handles POST requests to add a new document to MongoDB.
 func Insert(ctx *gofr.Context) (any, error) {
 	var p Person
+
+	// Bind incoming JSON request body to the Person struct
 	err := ctx.Bind(&p)
 	if err != nil {
 		return nil, err
 	}
 
+	// Insert the Person object into the "collection" collection
 	res, err := ctx.Mongo.InsertOne(ctx, "collection", p)
 	if err != nil {
 		return nil, err
 	}
 
+	// Return the MongoDB insertion result (e.g., inserted ID)
 	return res, nil
 }
 
+// Get handles GET requests to retrieve a document by "name".
 func Get(ctx *gofr.Context) (any, error) {
 	var result Person
 
+	// Get the "name" query parameter from the URL
 	p := ctx.Param("name")
 
-	err := ctx.Mongo.FindOne(ctx, "collection", bson.D{{"name", p}} /* valid filter */, &result)
+	// Find a single document with the given name
+	err := ctx.Mongo.FindOne(ctx, "collection", bson.D{{"name", p}}, &result)
 	if err != nil {
 		return nil, err
 	}
 
+	// Return the found document
 	return result, nil
 }
 ```
+Best Practice:
+- Store secrets like DB credentials in `.env` or system environment variables.
+- Use `app.Config.Get("KEY")` to fetch them.
+- Alternatively, use `app.Config.GetOrDefault("KEY", "default_value")`
+- to provide a fallback if the variable is missing.
+
+
+Example:
+```go
+dbURI := app.Config.GetOrDefault("MONGODB_URI", "mongodb://localhost:27017")
+```
+
+
 Dockerfile
 ```Dockerfile
 FROM golang:1.24 as builder
