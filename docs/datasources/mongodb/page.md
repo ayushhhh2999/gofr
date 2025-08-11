@@ -48,7 +48,16 @@ Mongo-app
        handlers/ (optional) 
        models/ (optional)
 ```
-* At production level it's a good practice to create sperate files for your hadler function and models 
+* At production level it's a good practice to create sperate files for your hadler function and models
+* You can import them like this 
+```go
+import (
+"github.com/repo-name/module-name/handlers"
+"github.com/repo-name/module-name/models"
+)
+```
+
+
 Import the gofr's external driver for MongoDB:
 
 ```shell
